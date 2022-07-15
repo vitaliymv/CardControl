@@ -1,0 +1,61 @@
+version: "3"
+
+services:
+  web:
+    build: .
+    container_name: card_control_web
+    command:
+      bash -c "python manage.py makemigrations && 
+               python manage.py migrate && 
+               python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: mysql
+    container_name: django_db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./test_db:/var/lib/mysql
+
+  redis:
+    image: redis:alpine
+
+  celery-beat:
+    restart: always
+    build:
+      context: .
+    command: bash -c "celery -A CardControl beat -l info"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - web
+
+  celery-worker:
+    restart: always
+    build:
+      context: .
+    command: bash -c "celery -A CardControl worker --pool=solo -l info"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - web
+      - celery-beat
+
+

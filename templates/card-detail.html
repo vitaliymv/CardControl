@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block content %}
+    <div class="card w-75 mx-auto">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <h4 class="card-title">Series: <u>{{ card.series }}</u></h4>
+                <div class="d-flex justify-content-between">
+                    <form action="{{ request.path }}delete">{% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete card</button>
+                    </form>
+                    <a href="{{ request.path }}edit" class="btn btn-warning mx-3">Edit card</a>
+                </div>
+            </div>
+
+            <h5 class="card-title">Number: <u>{{ card.number|wrapper }}</u></h5>
+            <h5 class="card-title">CVV: <u>{{ card.cvv }}</u></h5>
+            <p class="card-text">Card release date: <u>{{ card.release_date|convert_date }}</u></p>
+            <p class="card-text">Date activity end: <u>{{ card.activity_end_date|convert_date }}</u></p>
+            <div class="d-flex justify-content-between">
+                <div class="col">
+                    <p class="card-text">Funds: <u>{{ card.funds }} UAH</u></p>
+                </div>
+                <div class="col">
+                    <p class="card-text text-end mx-4">
+                        Status:
+                        <u class="fw-bold {{ card.status|get_color }}">
+                            {{ card.status.capitalize }}
+                        </u>
+                    </p>
+                </div>
+                <form action="{{ request.path }}change-status/" method="post">{% csrf_token %}
+                    {% if card.status.lower == "active" %}
+                        <button type="submit" class="btn btn-warning">Deactivate</button>
+                    {% elif card.status.lower == "inactive" %}
+                        <button type="submit" class="btn btn-success">Activate</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        <div class="card-footer">
+            <h4 class="card-title">History</h4>
+            <ul class="list-group list-group-flush">
+                {% for purchase in card.purchase_set.all %}
+                    <li class="list-group-item mb-2">
+                        <p>Title: <b>{{ purchase.title }}</b></p>
+                        <p>Price: <b>-{{ purchase.price }} UAH</b></p>
+                        <p>Address: <b>{{ purchase.address }}</b></p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
